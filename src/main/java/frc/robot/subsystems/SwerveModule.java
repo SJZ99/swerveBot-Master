@@ -4,10 +4,13 @@
 
 package frc.robot.subsystems;
 
+import javax.xml.validation.Validator;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -17,6 +20,7 @@ import com.ctre.phoenix.sensors.SensorTimeBase;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.ModuleConstants;
 
 public class SwerveModule {
@@ -83,12 +87,12 @@ public class SwerveModule {
     m_turningMotor.setInverted(turningMotorReversed);
 
     // deadband
-    m_driveMotor.configNeutralDeadband(0.1);
+    m_driveMotor.configNeutralDeadband(0.05);
     m_turningMotor.configNeutralDeadband(0.1);
 
     // PIDF
-    m_driveMotor.config_kF(0, 0.025);
-    m_driveMotor.config_kP(0, 0);
+    m_driveMotor.config_kF(0, 0.065);
+    m_driveMotor.config_kP(0, 0.15);
     m_driveMotor.config_kI(0, 0);
     m_driveMotor.config_kD(0, 0);
 
@@ -104,6 +108,9 @@ public class SwerveModule {
     m_turningMotor.configMotionAcceleration(4096);
     m_turningMotor.configMotionCruiseVelocity(5108);
     m_turningMotor.setNeutralMode(NeutralMode.Brake);
+
+    var voltage = new SupplyCurrentLimitConfiguration(true, 30, 50, 0.1);
+    m_driveMotor.configSupplyCurrentLimit(voltage);
   }
   // CANcoder to talon
   private double deg2raw(double deg) {
@@ -117,7 +124,7 @@ public class SwerveModule {
 
   // m/s
   public double getDriveEncoderVelocity() {
-    return m_driveMotor.getSelectedSensorVelocity() * ModuleConstants.kDriveCoefficient;
+    return m_driveMotor.getSelectedSensorVelocity() * ModuleConstants.kDriveCoefficient * 10;
   }
 
   // deg
@@ -152,19 +159,29 @@ public class SwerveModule {
   public SwerveModulePosition getPosition() {
     return new SwerveModulePosition(getDriveEncoderPosition(), new Rotation2d(getTurningEncoderRadian()));
   }
-
+  public double getError() {
+    return m_driveMotor.getClosedLoopError();
+  }
   /**
    * Sets the desired state for the module.
    *
    * @param desiredState Desired state with speed and angle.
    */
+  int x = 0;
   public void setDesiredState(SwerveModuleState desiredState) {
     // Optimize the reference state to avoid spinning further than 90 degrees
     SwerveModuleState state = 
         SwerveModuleState.optimize(desiredState, new Rotation2d(getTurningEncoderRadian()));
 
-    // m -> raw
-    m_driveMotor.set(ControlMode.Velocity, state.speedMetersPerSecond / ModuleConstants.kDriveCoefficient);
+    x++;
+    if(x >= 10) {
+      x=0;
+      SmartDashboard.putNumber("Velocity", state.speedMetersPerSecond / ModuleConstants.kDriveCoefficient);
+      SmartDashboard.putNumber("Velocity(sensor)", m_driveMotor.getSelectedSensorVelocity());
+    }
+    // m -> raw    
+    // 補償CTRE是以每0.1s
+    m_driveMotor.set(ControlMode.Velocity, state.speedMetersPerSecond / ModuleConstants.kDriveCoefficient / 10.0);
     // deg -> raw
     m_turningMotor.set(ControlMode.MotionMagic, deg2raw(state.angle.getDegrees()));
   }

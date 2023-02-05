@@ -107,9 +107,10 @@ public class DriveSubsystem extends SubsystemBase {
           m_rearRight.getPosition()
         });
 
-    SmartDashboard.putNumber("X", m_odometry.getPoseMeters().getX());
-    SmartDashboard.putNumber("Y", m_odometry.getPoseMeters().getY());
-    SmartDashboard.putNumber("Yaw", m_gyro.getYaw());
+    // SmartDashboard.putNumber("X", m_odometry.getPoseMeters().getX());
+    // SmartDashboard.putNumber("Y", m_odometry.getPoseMeters().getY());
+    // SmartDashboard.putNumber("Yaw", m_gyro.getYaw());
+    // SmartDashboard.putNumber("error", m_frontLeft.getError());
   }
   public boolean isLevel() {
     return Math.abs(m_gyro.getPitch()) < 2 && Math.abs(m_gyro.getRoll()) < 2;
@@ -166,6 +167,7 @@ public class DriveSubsystem extends SubsystemBase {
     }
     xSpeed = limiter1.calculate(xSpeed);
     ySpeed = limiter2.calculate(ySpeed);
+    
 
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
@@ -185,10 +187,10 @@ public class DriveSubsystem extends SubsystemBase {
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(
         desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
-    // m_frontLeft.setDesiredState(desiredStates[0]);
-    // m_frontRight.setDesiredState(desiredStates[1]);
-    // m_rearLeft.setDesiredState(desiredStates[2]);
-    // m_rearRight.setDesiredState(desiredStates[3]);
+    m_frontLeft.setDesiredState(desiredStates[0]);
+    m_frontRight.setDesiredState(desiredStates[1]);
+    m_rearLeft.setDesiredState(desiredStates[2]);
+    m_rearRight.setDesiredState(desiredStates[3]);
   }
 
   /** Resets the drive encoders to currently read a position of 0. */
@@ -209,8 +211,6 @@ double x, y;
     }
     else y=0;
   
-
-
     if (m_gyro.getPitch() > 2){
       x=-0.2;
     }
@@ -222,15 +222,9 @@ double x, y;
       drive(y, x, 0, false);
     }
 
-public boolean isleveled (){
-
-return Math.abs(m_gyro.getRoll())<2 && Math.abs(m_gyro.getPitch())<2;
-
-}
-
-
-
-
+  public boolean isleveled(){
+    return Math.abs(m_gyro.getRoll())<2 && Math.abs(m_gyro.getPitch())<2;
+  }
   /** Zeroes the heading of the robot. */
   public void zeroHeading() {
     m_gyro.reset();

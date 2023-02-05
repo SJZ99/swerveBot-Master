@@ -59,9 +59,9 @@ public final class Constants {
     public static final int kRearLeftTurningMotorEncoderChannel = 3;
     public static final int kFrontRightTurningMotorEncoderChannel = 2;
     public static final int kRearRightTurningMotorEncoderChannel = 4;
-    public static final double kTrackWidth = 0.6;
+    public static final double kTrackWidth = 0.5;
     // Distance between centers of right and left wheels on robot
-    public static final double kWheelBase = 0.6;
+    public static final double kWheelBase = 0.5;
     // Distance between front and back wheels on robot
     public static final SwerveDriveKinematics kDriveKinematics =
         new SwerveDriveKinematics(
@@ -88,14 +88,8 @@ public final class Constants {
     public static final double kMaxModuleAngularAccelerationRadiansPerSecondSquared = 2 * Math.PI;
 
     public static final int kEncoderCPR = 2048;
-    public static final int kCanCoder = 4096;
     public static final double kDriveCoefficient =
-        // Assumes the encoders are directly mounted on the wheel shafts
-        0.1 * Math.PI / (double) kEncoderCPR / 8.14 * 10;
-
-    public static final double kTurningEncoderDistancePerPulse =
-        // Assumes the encoders are on a 1:1 reduction with the module shaft.
-        (2 * Math.PI) / kCanCoder;
+        0.1 * Math.PI / kEncoderCPR / 8.14;
 
     public static final double kPModuleTurningController = 1;
 
