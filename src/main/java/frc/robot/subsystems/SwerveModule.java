@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import javax.xml.validation.Validator;
-
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
