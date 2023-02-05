@@ -23,11 +23,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -46,9 +49,10 @@ import java.util.List;
 public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-
+  
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  Joystick m_Joystick = new Joystick(0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -75,7 +79,15 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then calling passing it to a
    * {@link JoystickButton}.
    */
-  private void configureButtonBindings() {}
+  private void configureButtonBindings() {
+  
+    new JoystickButton(m_Joystick, 4).onTrue(new InstantCommand(() -> m_robotDrive.drive( 0,0,0.8,false), m_robotDrive));
+
+    new JoystickButton(m_Joystick, 3).onTrue(Commands.run(m_robotDrive::level).until(null));
+   
+  
+
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -83,6 +95,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
 public Command getAutonomousCommand() { 
+
 
     String trajectoryJSON = "output/Path1.wpilib.json";
     Trajectory trajectory = new Trajectory();
@@ -103,8 +116,8 @@ public Command getAutonomousCommand() {
 
 
     var controller = new HolonomicDriveController(
-      new PIDController(1, 0, 0), new PIDController(1, 0, 0),
-      new ProfiledPIDController(1, 0, 0,
+      new PIDController(0.05, 0, 0), new PIDController(0.05, 0, 0),
+      new ProfiledPIDController(0.05, 0, 0,
         new TrapezoidProfile.Constraints(6.28, 3.14)));
 
 // Reset odometry to the starting pose of the trajectory.

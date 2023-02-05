@@ -116,6 +116,10 @@ public class SwerveModule {
     // close loop setting
      m_turningMotor.configClosedLoopPeakOutput(0, 1);
 
+    m_turningMotor.configNominalOutputForward(0.001);
+
+
+
      PIDController mRotorPID = new PIDController(
        0.75, 0, 0.8
      );

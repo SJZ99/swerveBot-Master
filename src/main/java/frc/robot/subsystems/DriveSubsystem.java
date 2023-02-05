@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.sensors.Pigeon2Configuration;
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
 
@@ -117,6 +118,8 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Mod4(raw)", m_rearRight.getTurningEncoderRaw());
 
     SmartDashboard.putNumber("GYRO", m_gyro.getYaw());
+    SmartDashboard.putNumber("Roll", m_gyro.getRoll());
+    SmartDashboard.putNumber("Pitch",m_gyro.getPitch());
   }
 
   /**
@@ -128,6 +131,9 @@ public class DriveSubsystem extends SubsystemBase {
     //return null;
     return m_odometry.getPoseMeters();
   }
+
+
+
 
   /**
    * Resets the odometry to the specified pose.
@@ -147,6 +153,8 @@ public class DriveSubsystem extends SubsystemBase {
   }
   SlewRateLimiter limiter1 = new SlewRateLimiter(1.5, -1.5, 0);
   SlewRateLimiter limiter2 = new SlewRateLimiter(1.5, -1.5, 0);
+
+  public Runnable drive;
 
   /**
    * Method to drive the robot using joystick info.
@@ -196,6 +204,38 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.resetEncoders();
     m_rearRight.resetEncoders();
   }
+double x, y;
+  public void level(){
+
+  if (m_gyro.getRoll() > 2){
+    y=-0.2;
+  } 
+  else if (m_gyro.getRoll() <-2){
+    y=0.2;
+  }
+  else y=0;
+ 
+
+
+  if (m_gyro.getPitch() > 2){
+    x=-0.2;
+  }
+  else if (m_gyro.getPitch() <-2){
+    x=0.2;
+  }
+  else x=0;
+
+drive(y, x, 0, false);
+  }
+
+public boolean isleveled (){
+
+return Math.abs(m_gyro.getRoll())<2 && Math.abs(m_gyro.getPitch())<2;
+
+}
+
+
+
 
   /** Zeroes the heading of the robot. */
   public void zeroHeading() {

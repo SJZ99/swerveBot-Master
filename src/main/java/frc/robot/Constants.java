@@ -59,10 +59,9 @@ public final class Constants {
     public static final int kRearLeftTurningMotorEncoderChannel = 3;
     public static final int kFrontRightTurningMotorEncoderChannel = 2;
     public static final int kRearRightTurningMotorEncoderChannel = 4;
-
-    public static final double kTrackWidth = 0.5;
+    public static final double kTrackWidth = 0.6;
     // Distance between centers of right and left wheels on robot
-    public static final double kWheelBase = 0.5;
+    public static final double kWheelBase = 0.6;
     // Distance between front and back wheels on robot
     public static final SwerveDriveKinematics kDriveKinematics =
         new SwerveDriveKinematics(
@@ -119,8 +118,8 @@ public final class Constants {
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
-    public static final double kPXController = 1;
-    public static final double kPYController = 1;
+    public static final double kPXController = 0.1;
+    public static final double kPYController = 0.1;
     public static final double kPThetaController = 1;
 
     // Constraint for the motion profiled robot angle controller
