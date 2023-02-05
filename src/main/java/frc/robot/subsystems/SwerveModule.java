@@ -78,7 +78,7 @@ public class SwerveModule {
     m_turningMotor.configSelectedFeedbackSensor(FeedbackDevice.None, 1, 10);
     
     m_driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-
+    // m_driveMotor.setSelectedSensorPosition(0);
     // reverse
     m_driveMotor.setInverted(driveReversed);
     m_driveMotor.setSensorPhase(driveEncoderReversed);
@@ -89,39 +89,24 @@ public class SwerveModule {
     m_driveMotor.configNeutralDeadband(0.1);
     m_turningMotor.configNeutralDeadband(0.1);
 
-    //stator current limit
-    // var currentLimit = new StatorCurrentLimitConfiguration();
-    // currentLimit.enable = true;
-    // currentLimit.triggerThresholdTime = 25;
-    // currentLimit.triggerThresholdCurrent = 30;
-    // currentLimit.triggerThresholdTime = 0.1;
-
-    // m_driveMotor.configStatorCurrentLimit(currentLimit);
-    // m_turningMotor.configStatorCurrentLimit(currentLimit);
-
     // PIDF
-    m_driveMotor.config_kF(0, 0.11);
-    m_driveMotor.config_kP(0, 0.008);
+    m_driveMotor.config_kF(0, 0.025);
+    m_driveMotor.config_kP(0, 0);
     m_driveMotor.config_kI(0, 0);
     m_driveMotor.config_kD(0, 0);
 
-    m_turningMotor.config_kF(0, 0.6);
-    m_turningMotor.config_kP(0, 1);
+    m_turningMotor.config_kF(0, 0.14);
+    m_turningMotor.config_kP(0, 1.2);
     m_turningMotor.config_kI(0, 0);
-    m_turningMotor.config_kD(0, 0.8);
+    m_turningMotor.config_kD(0, 0);
 
-    m_turningMotor.configMotionAcceleration(1024);
-    m_turningMotor.configMotionCruiseVelocity(1024);
+    m_turningMotor.configAllowableClosedloopError(0, 0);
+    m_turningMotor.configNominalOutputForward(0.095);
+    m_turningMotor.configNominalOutputReverse(-0.095);
+
+    m_turningMotor.configMotionAcceleration(4096);
+    m_turningMotor.configMotionCruiseVelocity(5108);
     m_turningMotor.setNeutralMode(NeutralMode.Brake);
-    // close loop setting
-     m_turningMotor.configClosedLoopPeakOutput(0, 1);
-
-     PIDController mRotorPID = new PIDController(
-       0.75, 0, 0.8
-     );
-    mRotorPID.enableContinuousInput(-180, 180);
-
-
   }
   // CANcoder to talon
   private double deg2raw(double deg) {
@@ -181,9 +166,6 @@ public class SwerveModule {
     SwerveModuleState state = 
         SwerveModuleState.optimize(desiredState, new Rotation2d(getTurningEncoderRadian()));
 
-    // state = new SwerveModuleState(0.3, Rotation2d.fromDegrees(90));
-    SmartDashboard.putNumber("target(deg)" + m_turningEncoder.getDeviceID(), (state.angle.getDegrees()));
-    SmartDashboard.putNumber("target(raw)" + m_turningEncoder.getDeviceID(), deg2raw(state.angle.getDegrees()));
     // m -> raw
     m_driveMotor.set(ControlMode.Velocity, state.speedMetersPerSecond / ModuleConstants.kDriveCoefficient);
     // deg -> raw
