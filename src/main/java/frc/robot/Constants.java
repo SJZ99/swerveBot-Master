@@ -91,11 +91,11 @@ public final class Constants {
     public static final int kCanCoder = 4096;
     public static final double kDriveCoefficient =
         // Assumes the encoders are directly mounted on the wheel shafts
-        0.31596 / (double) kEncoderCPR;
+        0.1 * Math.PI / (double) kEncoderCPR / 8.14 * 10;
 
     public static final double kTurningEncoderDistancePerPulse =
         // Assumes the encoders are on a 1:1 reduction with the module shaft.
-        (2 * Math.PI) / kEncoderCPR;
+        (2 * Math.PI) / kCanCoder;
 
     public static final double kPModuleTurningController = 1;
 

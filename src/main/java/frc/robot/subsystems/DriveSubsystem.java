@@ -93,6 +93,7 @@ public class DriveSubsystem extends SubsystemBase {
     config.enableOptimizations= false;
 
     m_gyro.configAllSettings(config);
+    m_gyro.setYaw(0);
   }
 
   @Override
@@ -107,19 +108,12 @@ public class DriveSubsystem extends SubsystemBase {
           m_rearRight.getPosition()
         });
 
-    SmartDashboard.putNumber("Mod1(deg)", m_frontLeft.getTurningEncoderAngle());
-    SmartDashboard.putNumber("Mod2(deg)", m_frontRight.getTurningEncoderAngle());
-    SmartDashboard.putNumber("Mod3(deg)", m_rearLeft.getTurningEncoderAngle());
-    SmartDashboard.putNumber("Mod4(deg)", m_rearRight.getTurningEncoderAngle());
-
-    SmartDashboard.putNumber("Mod1(raw)", m_frontLeft.getTurningEncoderRaw());
-    SmartDashboard.putNumber("Mod2(raw)", m_frontRight.getTurningEncoderRaw());
-    SmartDashboard.putNumber("Mod3(raw)", m_rearLeft.getTurningEncoderRaw());
-    SmartDashboard.putNumber("Mod4(raw)", m_rearRight.getTurningEncoderRaw());
-
-    SmartDashboard.putNumber("GYRO", m_gyro.getYaw());
-    SmartDashboard.putNumber("Roll", m_gyro.getRoll());
-    SmartDashboard.putNumber("Pitch",m_gyro.getPitch());
+    SmartDashboard.putNumber("X", m_odometry.getPoseMeters().getX());
+    SmartDashboard.putNumber("Y", m_odometry.getPoseMeters().getY());
+    SmartDashboard.putNumber("Yaw", m_gyro.getYaw());
+  }
+  public boolean isLevel() {
+    return Math.abs(m_gyro.getPitch()) < 2 && Math.abs(m_gyro.getRoll()) < 2;
   }
 
   /**
@@ -181,6 +175,7 @@ public class DriveSubsystem extends SubsystemBase {
                 : new ChassisSpeeds(xSpeed, ySpeed, rot));
   
     setModuleStates(swerveModuleStates);
+    // SmartDashboard.putNumber("error", xSpeed - m_frontLeft.getDriveEncoderVelocity());
   }
 
   /**
@@ -191,10 +186,10 @@ public class DriveSubsystem extends SubsystemBase {
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(
         desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
-    m_frontLeft.setDesiredState(desiredStates[0]);
-    m_frontRight.setDesiredState(desiredStates[1]);
-    m_rearLeft.setDesiredState(desiredStates[2]);
-    m_rearRight.setDesiredState(desiredStates[3]);
+    // m_frontLeft.setDesiredState(desiredStates[0]);
+    // m_frontRight.setDesiredState(desiredStates[1]);
+    // m_rearLeft.setDesiredState(desiredStates[2]);
+    // m_rearRight.setDesiredState(desiredStates[3]);
   }
 
   /** Resets the drive encoders to currently read a position of 0. */
@@ -207,26 +202,26 @@ public class DriveSubsystem extends SubsystemBase {
 double x, y;
   public void level(){
 
-  if (m_gyro.getRoll() > 2){
-    y=-0.2;
-  } 
-  else if (m_gyro.getRoll() <-2){
-    y=0.2;
-  }
-  else y=0;
- 
+    if (m_gyro.getRoll() > 2){
+      y=-0.2;
+    } 
+    else if (m_gyro.getRoll() <-2){
+      y=0.2;
+    }
+    else y=0;
+  
 
 
-  if (m_gyro.getPitch() > 2){
-    x=-0.2;
-  }
-  else if (m_gyro.getPitch() <-2){
-    x=0.2;
-  }
-  else x=0;
+    if (m_gyro.getPitch() > 2){
+      x=-0.2;
+    }
+    else if (m_gyro.getPitch() <-2){
+      x=0.2;
+    }
+    else x=0;
 
-drive(y, x, 0, false);
-  }
+      drive(y, x, 0, false);
+    }
 
 public boolean isleveled (){
 

@@ -4,24 +4,16 @@
 
 package frc.robot;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.constraint.SwerveDriveKinematicsConstraint;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
@@ -35,10 +27,10 @@ import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
+import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.OIConstants;
+import frc.robot.subsystems.DriveSubsystem;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -52,7 +44,7 @@ public class RobotContainer {
   
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
-  Joystick m_Joystick = new Joystick(0);
+  // Joystick m_Joystick = new Joystick(0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -66,10 +58,10 @@ public class RobotContainer {
         new RunCommand(
             () ->
                 m_robotDrive.drive(
-                    m_driverController.getLeftY() *0.4,
-                    m_driverController.getLeftX()*0.4,
-                    m_driverController.getRightX() *0.8,
-                    true),
+                    m_driverController.getLeftY() * 0.4,
+                    m_driverController.getLeftX() * 0.4,
+                    m_driverController.getRightX() * 0.8,
+                    false),
             m_robotDrive));
   }
 
@@ -81,9 +73,9 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
   
-    new JoystickButton(m_Joystick, 4).onTrue(new InstantCommand(() -> m_robotDrive.drive( 0,0,0.8,false), m_robotDrive));
+    new JoystickButton(m_driverController, 4).onTrue(new InstantCommand(() -> m_robotDrive.drive( 0,0,0.8,false), m_robotDrive));
 
-    new JoystickButton(m_Joystick, 3).onTrue(Commands.run(m_robotDrive::level).until(null));
+    new JoystickButton(m_driverController, 3).onTrue(Commands.run(m_robotDrive::level).until(null));
    
   
 
@@ -94,112 +86,50 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-public Command getAutonomousCommand() { 
+  public Command getAutonomousCommand() { 
 
-
-    String trajectoryJSON = "output/Path1.wpilib.json";
+    String trajectoryJSON = "output/path.wpilib.json";
     Trajectory trajectory = new Trajectory();
     
     
-        try {
-          Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
-          trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-        } catch (IOException ex) {
-          DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
-        }
-          
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+    } catch (IOException ex) {
+      DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
+    }
+            
 
-      var thetaController =
-      new ProfiledPIDController(
-          AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-  thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    var thetaController =
+      new ProfiledPIDController(0.06, 0, 0, AutoConstants.kThetaControllerConstraints);
+
+    thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
 
     var controller = new HolonomicDriveController(
-      new PIDController(0.05, 0, 0), new PIDController(0.05, 0, 0),
-      new ProfiledPIDController(0.05, 0, 0,
-        new TrapezoidProfile.Constraints(6.28, 3.14)));
+      new PIDController(0.25, 0, 0), 
+      new PIDController(0.25, 0, 0),
+      thetaController);
 
-// Reset odometry to the starting pose of the trajectory.
+    // Reset odometry to the starting pose of the trajectory.
+    m_robotDrive.resetOdometry(trajectory.getInitialPose());
 
-m_robotDrive.resetOdometry(trajectory.getInitialPose());
+    SwerveControllerCommand swerveControllerCommand =
+        new SwerveControllerCommand(
+          trajectory,
+            m_robotDrive::getPose, // Functional interface to feed supplier
+            DriveConstants.kDriveKinematics,
 
-// Run path following command, then stop at the end.
+            // Position controllers
+            controller,
+            m_robotDrive::setModuleStates,
+            m_robotDrive);
 
-// Sample the trajectory at 3.4 seconds from the beginning.
-Trajectory.State goal = trajectory.sample(3.4);
+    // Reset odometry to the starting pose of the trajectory.
+    m_robotDrive.resetOdometry(trajectory.getInitialPose());
 
-// Get the adjusted speeds. Here, we want the robot to be facing
-// 70 degrees (in the field-relative coordinate system).
-ChassisSpeeds adjustedSpeeds = controller.calculate(
-  m_robotDrive.getPose(), goal, Rotation2d.fromDegrees(70.0));
-
-
-
-  SwerveControllerCommand swerveControllerCommand =
-      new SwerveControllerCommand(
-        trajectory,
-          m_robotDrive::getPose, // Functional interface to feed supplier
-          DriveConstants.kDriveKinematics,
-
-          // Position controllers
-          new PIDController(AutoConstants.kPXController, 0, 0),
-          new PIDController(AutoConstants.kPYController, 0, 0),
-          thetaController,
-          m_robotDrive::setModuleStates,
-          m_robotDrive);
-
-  // Reset odometry to the starting pose of the trajectory.
-  m_robotDrive.resetOdometry(trajectory.getInitialPose());
-
-  //Run path following command, then stop at the end.
-  return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, true));
+    //Run path following command, then stop at the end.
+    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, true));
 
   }
-
- //Create config for trajectory
-  //   TrajectoryConfig config =
-  //       new TrajectoryConfig(
-  //               AutoConstants.kMaxSpeedMetersPerSecond,
-  //               AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-  //           // Add kinematics to ensure max speed is actually obeyed
-  //           .setKinematics(DriveConstants.kDriveKinematics);
-
-  //  // An example trajectory to follow.  All units in meters.
-  //   Trajectory exampleTrajectory =
-  //       TrajectoryGenerator.generateTrajectory(
-  //           // Start at the origin facing the +X direction
-  //           new Pose2d(0, 0, new Rotation2d(0)),
-  //           // Pass through these two interior waypoints, making an 's' curve path
-  //           List.of(),
-  //           // End 3 meters straight ahead of where we started, facing forward
-  //           new Pose2d(3, 0, new Rotation2d(0)),
-  //           config);
-
-  //   var thetaController =
-  //       new ProfiledPIDController(
-  //           AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-  //   thetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-  //   SwerveControllerCommand swerveControllerCommand =
-  //       new SwerveControllerCommand(
-  //           exampleTrajectory,
-  //           m_robotDrive::getPose, // Functional interface to feed supplier
-  //           DriveConstants.kDriveKinematics,
-
-  //           // Position controllers
-  //           new PIDController(AutoConstants.kPXController, 0, 0),
-  //           new PIDController(AutoConstants.kPYController, 0, 0),
-  //           thetaController,
-  //           m_robotDrive::setModuleStates,
-  //           m_robotDrive);
-
-  //   // Reset odometry to the starting pose of the trajectory.
-  //   m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
-
-  //   //Run path following command, then stop at the end.
-  //   return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
-   
-  // }
-
  }
