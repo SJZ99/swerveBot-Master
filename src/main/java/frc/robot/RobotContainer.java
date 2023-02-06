@@ -66,14 +66,10 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
   
-   new JoystickButton(m_driverController, 3).whileTrue(Commands.runOnce(() -> m_robotDrive.drive( 0,0,0,false), m_robotDrive));
-   new JoystickButton(m_driverController, 4).whileTrue(Commands.runOnce(() -> m_robotDrive.drive( 0.35,0,0,false), m_robotDrive));
-   
-
-    // new JoystickButton(m_driverController, 3).onTrue(Commands.run(m_robotDrive::level).until(null));
-   
+  //  new JoystickButton(m_driverController, 3).whileTrue(Commands.runOnce(() -> m_robotDrive.drive( 0,0,0,false), m_robotDrive));
+  //  new JoystickButton(m_driverController, 4).whileTrue(Commands.runOnce(() -> m_robotDrive.drive( 0.35,0,0,false), m_robotDrive));
   
-
+    new JoystickButton(m_driverController, 3).whileTrue(Commands.run(m_robotDrive::level));
   }
 
   /**

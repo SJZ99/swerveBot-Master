@@ -106,6 +106,7 @@ public class SwerveModule {
     m_turningMotor.configMotionAcceleration(4096);
     m_turningMotor.configMotionCruiseVelocity(5108);
     m_turningMotor.setNeutralMode(NeutralMode.Brake);
+    m_driveMotor.setNeutralMode(NeutralMode.Coast);
 
     var voltage = new SupplyCurrentLimitConfiguration(true, 30, 50, 0.1);
     m_driveMotor.configSupplyCurrentLimit(voltage);
@@ -136,6 +137,7 @@ public class SwerveModule {
   public double getTurningEncoderRadian() {
     return getTurningEncoderAngle() / 180.0 * Math.PI;
   }
+  
   public double getTurningEncoderRaw() {
     return deg2raw(getTurningEncoderAngle());
   }
@@ -155,7 +157,7 @@ public class SwerveModule {
    * @return The current position of the module.
    */
   public SwerveModulePosition getPosition() {
-    return new SwerveModulePosition(getDriveEncoderPosition(), new Rotation2d(getTurningEncoderRadian()));
+    return new SwerveModulePosition(getDriveEncoderPosition(), Rotation2d.fromDegrees(getTurningEncoderAngle()));
   }
   public double getError() {
     return m_driveMotor.getClosedLoopError();
